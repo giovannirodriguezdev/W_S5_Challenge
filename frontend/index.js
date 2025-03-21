@@ -1,3 +1,5 @@
+// const { default: axios } = require("axios");
+
 async function sprintChallenge5() { // Note the async keyword so you can use `await` inside sprintChallenge5
   // 👇 WORK ONLY BELOW THIS LINE 👇
   // 👇 WORK ONLY BELOW THIS LINE 👇
@@ -8,9 +10,16 @@ async function sprintChallenge5() { // Note the async keyword so you can use `aw
   // 🧠 Use Axios to GET learners and mentors.
   // ❗ Use the variables `mentors` and `learners` to store the data.
   // ❗ Use the await keyword when using axios.
+  const mentorsAPI = "http://localhost:3003/api/mentors";
+  const learnersAPI = "http://localhost:3003/api/learners"; 
 
-  let mentors = [] // fix this
-  let learners = [] // fix this
+  try {
+    const mentorsResponse = await axios.get(mentorsAPI);
+    const learnersResponse = await axios.get(learnersAPI);
+
+    const mentors = mentorsResponse.data;
+    let learners = learnersResponse.data;
+  
 
   // 👆 ==================== TASK 1 END ====================== 👆
 
@@ -28,7 +37,20 @@ async function sprintChallenge5() { // Note the async keyword so you can use `aw
   //     "Grace Hopper"
   //   ]`
   // }
-
+  learners = learners.map(learner => {
+    return {
+      id: learner.id,
+      fullName: learner.fullName,
+      email: learner.email,
+      mentors: learner.mentors.map(mentorId => {
+        let mentor = mentors.find(m => m.id === mentorId);
+        return mentor ? mentor.firstName + " " + mentor.lastName : "Unknown Mentor";
+      })
+    };
+  });
+  console.log("Updated Learners:", learners);
+  console.log(learners[4]);
+  
   // 👆 ==================== TASK 2 END ====================== 👆
 
   const cardsContainer = document.querySelector('.cards')
@@ -38,7 +60,7 @@ async function sprintChallenge5() { // Note the async keyword so you can use `aw
 
   // 👇 ==================== TASK 3 START ==================== 👇
 
-  for (let learner of learners) { // looping over each learner object
+  learners.forEach(learner => { // looping over each learner object
 
     // 🧠 Flesh out the elements that describe each learner
     // ❗ Give the elements below their (initial) classes, textContent and proper nesting.
@@ -53,6 +75,38 @@ async function sprintChallenge5() { // Note the async keyword so you can use `aw
     const mentorsHeading = document.createElement('h4')
     const mentorsList = document.createElement('ul')
 
+    mentorsList.style.display = "none";
+
+    card.classList.add("card");
+    email.classList.add("email");
+    mentorsHeading.classList.add("closed");
+
+    heading.textContent = learner.fullName;
+    email.textContent = learner.email;
+    mentorsHeading.textContent = "Mentors";
+
+    learner.mentors.forEach(mentorName => {
+      const mentorItem = document.createElement("li");
+      mentorItem.textContent = mentorName;
+      mentorsList.appendChild(mentorItem);
+    })
+
+    mentorsHeading.addEventListener("click", () => {
+      if (mentorsList.style.display === "none") {
+        mentorsList.style.display = "block";
+        // mentorsHeading.remove("closed");
+        // mentorsHeading.add("open");
+      } else {
+        mentorsList.style.display = "none";
+        // mentorsHeading.classList.remove("open");
+        // mentorsHeading.classList.add("closed");
+      }
+    });
+
+    card.appendChild(heading);
+    card.appendChild(email);
+    card.appendChild(mentorsHeading);
+    card.appendChild(mentorsList);
     // 👆 ==================== TASK 3 END ====================== 👆
 
     // 👆 WORK ONLY ABOVE THIS LINE 👆
@@ -97,11 +151,16 @@ async function sprintChallenge5() { // Note the async keyword so you can use `aw
         }
       }
     })
-  }
+  });
+  const footer = document.querySelector('footer');
+  const currentYear = new Date().getFullYear();
+  footer.textContent = `© BLOOM INSTITUTE OF TECHNOLOGY ${currentYear}`;
 
-  const footer = document.querySelector('footer')
-  const currentYear = new Date().getFullYear()
-  footer.textContent = `© BLOOM INSTITUTE OF TECHNOLOGY ${currentYear}`
+  return learners;
+
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
 }
 
 // ❗ DO NOT CHANGE THIS CODE. WORK ONLY INSIDE TASKS 1, 2, 3
